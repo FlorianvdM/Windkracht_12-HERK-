@@ -37,14 +37,19 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
+        // De wachtwoordregels uit de casus gelden overal: bij registreren, wachtwoord vergeten
+        // en wachtwoord wijzigen. Ze gelden ook op mijn eigen computer, niet alleen in productie.
+        Password::defaults(function (): Password {
+            // Minimaal 12 tekens, hoofdletter (en kleine letter), cijfer en leesteken.
+            $regels = Password::min(12)
                 ->mixedCase()
                 ->letters()
                 ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+                ->symbols();
+
+            // 'uncompromised' vraagt aan een externe website of het wachtwoord in een datalek staat.
+            // Dat doen we alleen in productie, anders werkt registreren niet zonder internet.
+            return app()->isProduction() ? $regels->uncompromised() : $regels;
+        });
     }
 }
