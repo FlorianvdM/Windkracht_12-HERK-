@@ -10,10 +10,12 @@ export default function KlantHome() {
                 {
                     titel: 'Reserveren',
                     uitleg: 'Kies een pakket, een locatie en je lesdagen.',
+                    href: '/klant/reserveren',
                 },
                 {
                     titel: 'Mijn reserveringen',
                     uitleg: 'Bekijk je reserveringen en of ze voorlopig of definitief zijn.',
+                    href: '/klant/reserveringen',
                 },
             ]}
         />
