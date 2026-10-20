@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * Een reservering van een klant voor een pakket op een locatie.
@@ -29,6 +30,21 @@ class Reservation extends Model
             'status' => ReservationStatus::class,
             'payment_reported' => 'boolean',
         ];
+    }
+
+    /**
+     * Het volgende reserveringsnummer, bijvoorbeeld WK12-1008.
+     * We zoeken het hoogste bestaande nummer en tellen er één bij op. Zo botsen nieuwe nummers
+     * nooit met de nummers uit de testdata (WK12-1001 en WK12-1007).
+     */
+    public static function nextNumber(): string
+    {
+        $hoogste = static::query()
+            ->pluck('number')
+            ->map(fn (string $nummer): int => (int) Str::after($nummer, 'WK12-'))
+            ->max();
+
+        return 'WK12-'.(($hoogste ?: 1000) + 1);
     }
 
     public function customer(): BelongsTo
