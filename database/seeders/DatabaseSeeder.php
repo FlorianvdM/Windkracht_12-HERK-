@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,12 +11,15 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     * De volgorde telt: locaties hebben instructeurs nodig, reserveringen hebben klanten, pakketten en locaties nodig.
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            UserSeeder::class,
+            PackageSeeder::class,
+            LocationSeeder::class,
+            ReservationSeeder::class,
         ]);
     }
 }
