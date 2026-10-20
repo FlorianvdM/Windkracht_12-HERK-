@@ -39,3 +39,17 @@ export type ReservationData = {
     customer: { name: string; email: string };
     lessons: LessonRow[];
 };
+
+// Een reservering zoals de eigenaar die ziet bij "Definitief maken".
+export type OwnerReservation = {
+    id: number;
+    number: string;
+    status: 'voorlopig' | 'definitief';
+    payment_reported: boolean;
+    total_cents: number;
+    package: { name: string; hours: number };
+    location: { name: string };
+    customer: { name: string; email: string };
+    instructor: { name: string; email: string } | null;
+    lessons: { id: number; date: string; time: string; status: string }[];
+};
