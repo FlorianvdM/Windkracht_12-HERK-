@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CalendarDays, LayoutGrid, Users } from 'lucide-react';
+import {
+    CalendarDays,
+    CalendarPlus,
+    LayoutGrid,
+    ListChecks,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -18,7 +24,15 @@ import type { NavItem, Role } from '@/types';
 // Welke links ziet welke rol? De eigenaar heeft toegang tot alle pagina's,
 // dus die ziet ook de homepages van de klant en de instructeur.
 const menuPerRol: Record<Role, NavItem[]> = {
-    klant: [{ title: 'Home', href: '/klant', icon: LayoutGrid }],
+    klant: [
+        { title: 'Home', href: '/klant', icon: LayoutGrid },
+        { title: 'Reserveren', href: '/klant/reserveren', icon: CalendarPlus },
+        {
+            title: 'Mijn reserveringen',
+            href: '/klant/reserveringen',
+            icon: ListChecks,
+        },
+    ],
     instructeur: [{ title: 'Home', href: '/instructeur', icon: LayoutGrid }],
     eigenaar: [
         { title: 'Home', href: '/eigenaar', icon: LayoutGrid },
