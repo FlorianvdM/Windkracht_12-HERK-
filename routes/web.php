@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Klant\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pagina's voor klanten.
     Route::middleware('role:klant')->prefix('klant')->name('klant.')->group(function () {
         Route::inertia('/', 'klant/home')->name('home');
+
+        // Reserveren: formulier tonen en opslaan.
+        Route::get('reserveren', [ReservationController::class, 'create'])->name('reservations.create');
+        Route::post('reserveren', [ReservationController::class, 'store'])->name('reservations.store');
+
+        // Eigen reserveringen: overzicht en bevestiging van één reservering.
+        Route::get('reserveringen', [ReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reserveringen/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
     });
 
     // Pagina's voor instructeurs.
