@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,12 +17,21 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard()
+    public function test_each_role_is_redirected_to_its_own_home_page()
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        // /dashboard stuurt elke rol door naar de eigen homepage.
+        $verwacht = [
+            Role::Klant->value => 'klant.home',
+            Role::Instructeur->value => 'instructeur.home',
+            Role::Eigenaar->value => 'eigenaar.home',
+        ];
 
-        $response = $this->get(route('dashboard'));
-        $response->assertOk();
+        foreach ($verwacht as $rol => $routeNaam) {
+            $user = User::factory()->create(['role' => $rol]);
+
+            $this->actingAs($user)
+                ->get(route('dashboard'))
+                ->assertRedirect(route($routeNaam));
+        }
     }
 }
