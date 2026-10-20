@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Eigenaar\ReservationController as EigenaarReservationController;
 use App\Http\Controllers\Klant\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pagina's voor de eigenaar.
     Route::middleware('role:eigenaar')->prefix('eigenaar')->name('eigenaar.')->group(function () {
         Route::inertia('/', 'eigenaar/home')->name('home');
+
+        // Een reservering definitief maken: de pagina tonen en de status aanpassen.
+        Route::get('reserveringen/{reservation}', [EigenaarReservationController::class, 'show'])->name('reservations.show');
+        Route::post('reserveringen/{reservation}/definitief', [EigenaarReservationController::class, 'confirm'])->name('reservations.confirm');
     });
 });
 
