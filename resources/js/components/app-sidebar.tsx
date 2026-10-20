@@ -1,7 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { CalendarDays, LayoutGrid, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -14,36 +13,35 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import type { NavItem, Role } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+// Welke links ziet welke rol? De eigenaar heeft toegang tot alle pagina's,
+// dus die ziet ook de homepages van de klant en de instructeur.
+const menuPerRol: Record<Role, NavItem[]> = {
+    klant: [{ title: 'Home', href: '/klant', icon: LayoutGrid }],
+    instructeur: [{ title: 'Home', href: '/instructeur', icon: LayoutGrid }],
+    eigenaar: [
+        { title: 'Home', href: '/eigenaar', icon: LayoutGrid },
+        { title: 'Klantpagina', href: '/klant', icon: Users },
+        { title: 'Instructeurpagina', href: '/instructeur', icon: CalendarDays },
+    ],
+};
 
 export function AppSidebar() {
+    // De ingelogde gebruiker (met rol) komt van Laravel.
+    const { auth } = usePage().props;
+    const rol = auth.user.role;
+
+    // 'klant' wordt 'Klant' (eerste letter hoofdletter).
+    const rolNaam = rol.charAt(0).toUpperCase() + rol.slice(1);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
+                            {/* /dashboard stuurt door naar de homepage van de rol */}
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -53,11 +51,18 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={menuPerRol[rol]} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {/* Casus: op elke pagina staat wie is ingelogd en met welke rol. */}
+                <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+                    Ingelogd als{' '}
+                    <span className="font-medium text-foreground">
+                        {auth.user.name}
+                    </span>{' '}
+                    ({rolNaam})
+                </p>
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
