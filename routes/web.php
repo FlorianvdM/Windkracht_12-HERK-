@@ -38,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:eigenaar')->prefix('eigenaar')->name('eigenaar.')->group(function () {
         Route::inertia('/', 'eigenaar/home')->name('home');
 
+        // NIEUW: overzicht van alle reserveringen. Met ?filter=onbetaald zie je alleen de voorlopige.
+        Route::get('reserveringen', [EigenaarReservationController::class, 'index'])->name('reservations.index');
+
         // Een reservering definitief maken: de pagina tonen en de status aanpassen.
         Route::get('reserveringen/{reservation}', [EigenaarReservationController::class, 'show'])->name('reservations.show');
         Route::post('reserveringen/{reservation}/definitief', [EigenaarReservationController::class, 'confirm'])->name('reservations.confirm');
