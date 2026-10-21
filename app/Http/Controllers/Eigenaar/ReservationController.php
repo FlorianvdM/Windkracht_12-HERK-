@@ -6,6 +6,7 @@ use App\Enums\ReservationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,6 +15,52 @@ use Inertia\Response;
  */
 class ReservationController extends Controller
 {
+    /**
+     * NIEUW: overzicht van alle reserveringen (casus 3i).
+     * Met ?filter=onbetaald tonen we alleen reserveringen die nog 'voorlopig' zijn.
+     * Voorlopig betekent: de eigenaar heeft de betaling nog niet gecontroleerd.
+     */
+    public function index(Request $request): Response
+    {
+        // Alleen 'onbetaald' is een geldig filter. Elke andere waarde betekent: alles tonen.
+        $filter = $request->query('filter') === 'onbetaald' ? 'onbetaald' : 'alle';
+
+        // 'with' haalt klant, pakket en locatie in één keer op, zodat we niet per rij de database in moeten.
+        // 'withCount' telt het aantal lessen per reservering.
+        $query = Reservation::query()
+            ->with(['customer', 'package', 'location'])
+            ->withCount('lessons')
+            ->latest('id');
+
+        if ($filter === 'onbetaald') {
+            $query->where('status', ReservationStatus::Voorlopig->value);
+        }
+
+        return Inertia::render('eigenaar/reserveringen', [
+            'filter' => $filter,
+            // Aantallen voor de knoppen boven de tabel, los van het gekozen filter.
+            'counts' => [
+                'alle' => Reservation::count(),
+                'onbetaald' => Reservation::where('status', ReservationStatus::Voorlopig->value)->count(),
+            ],
+            // Zet elke reservering om naar een eenvoudige lijst die de React-pagina kan gebruiken.
+            'reservations' => $query->get()->map(fn (Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'number' => $reservation->number,
+                'status' => $reservation->status->value,
+                'payment_reported' => $reservation->payment_reported, // klant meldt: ik heb betaald
+                'total_cents' => $reservation->total_cents,
+                'lessons_count' => $reservation->lessons_count,
+                'customer' => [
+                    'name' => $reservation->customer->name,
+                    'email' => $reservation->customer->email,
+                ],
+                'package' => ['name' => $reservation->package->name],
+                'location' => ['name' => $reservation->location->name],
+            ])->values(),
+        ]);
+    }
+
     /**
      * De pagina "Definitief maken" met een voorbeeld van de twee bevestigingsmails (wireframe 37).
      */
