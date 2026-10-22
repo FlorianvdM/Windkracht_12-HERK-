@@ -2,11 +2,12 @@
 
 use App\Http\Controllers\Eigenaar\ReservationController as EigenaarReservationController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Instructeur\LessonController as InstructeurLessonController;
 use App\Http\Controllers\Klant\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Algemene homepage: voor iedereen toegankelijk. Nu via een controller, zodat de pakketten uit de database komen.
+// Algemene homepage: voor iedereen toegankelijk. Via een controller, zodat de pakketten uit de database komen.
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Vanaf hier moet je ingelogd zijn.
@@ -36,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pagina's voor instructeurs.
     Route::middleware('role:instructeur')->prefix('instructeur')->name('instructeur.')->group(function () {
         Route::inertia('/', 'instructeur/home')->name('home');
+
+        // NIEUW: dag-, week- en maandoverzicht van de eigen lessen (casus 1f).
+        // De weergave en datum staan in de adresbalk: ?weergave=week&datum=2026-10-22
+        Route::get('lessen', [InstructeurLessonController::class, 'index'])->name('lessons.index');
     });
 
     // Pagina's voor de eigenaar.
