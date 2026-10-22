@@ -27,6 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Eigen reserveringen: overzicht en bevestiging van één reservering.
         Route::get('reserveringen', [ReservationController::class, 'index'])->name('reservations.index');
         Route::get('reserveringen/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
+
+        // NIEUW: de klant meldt dat hij het bedrag heeft betaald (casus 2g).
+        Route::post('reserveringen/{reservation}/betaald', [ReservationController::class, 'reportPayment'])->name('reservations.report-payment');
     });
 
     // Pagina's voor instructeurs.
@@ -38,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:eigenaar')->prefix('eigenaar')->name('eigenaar.')->group(function () {
         Route::inertia('/', 'eigenaar/home')->name('home');
 
-        // NIEUW: overzicht van alle reserveringen. Met ?filter=onbetaald zie je alleen de voorlopige.
+        // Overzicht van alle reserveringen. Met ?filter=onbetaald zie je alleen de voorlopige.
         Route::get('reserveringen', [EigenaarReservationController::class, 'index'])->name('reservations.index');
 
         // Een reservering definitief maken: de pagina tonen en de status aanpassen.
