@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDatum, formatEuro } from '@/lib/format';
@@ -7,6 +7,16 @@ import type { ReservationData } from '@/types/reservation';
 // De status van een les als leesbare tekst: 'gepland' wordt 'Gepland'.
 const lesStatus = (status: string) =>
     status.charAt(0).toUpperCase() + status.slice(1);
+
+// NIEUW: de klant meldt dat hij het bedrag heeft overgemaakt (casus 2g).
+// We sturen alleen het verzoek naar Laravel; de server zet 'payment_reported' op true.
+const meldBetaling = (id: number) => {
+    router.post(
+        `/klant/reserveringen/${id}/betaald`,
+        {},
+        { preserveScroll: true },
+    );
+};
 
 // Overzicht van de eigen reserveringen (wireframe 14).
 export default function Reserveringen({
@@ -87,6 +97,20 @@ export default function Reserveringen({
                                 </li>
                             ))}
                         </ul>
+
+                        {/* NIEUW: de knop verschijnt alleen als de reservering voorlopig is
+                            en de klant nog niet heeft gemeld dat hij betaald heeft. */}
+                        {reservering.status === 'voorlopig' &&
+                            !reservering.payment_reported && (
+                                <div className="mt-3 border-t pt-3">
+                                    <Button
+                                        size="sm"
+                                        onClick={() => meldBetaling(reservering.id)}
+                                    >
+                                        Betaling melden
+                                    </Button>
+                                </div>
+                            )}
                     </article>
                 ))}
             </div>

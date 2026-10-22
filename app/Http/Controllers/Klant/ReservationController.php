@@ -132,6 +132,23 @@ class ReservationController extends Controller
     }
 
     /**
+     * NIEUW: de klant meldt dat hij het openstaande bedrag heeft betaald (casus 2g).
+     * Dit maakt de reservering nog NIET definitief: dat doet alleen de eigenaar na controle van de betaling.
+     */
+    public function reportPayment(Request $request, Reservation $reservation): RedirectResponse
+    {
+        // Net als bij show(): een reservering van een andere klant bestaat voor jou niet (404).
+        abort_unless($reservation->user_id === $request->user()->id, 404);
+
+        // Melden heeft alleen zin zolang de reservering voorlopig is.
+        if ($reservation->status === ReservationStatus::Voorlopig) {
+            $reservation->update(['payment_reported' => true]);
+        }
+
+        return back();
+    }
+
+    /**
      * De gegevens die we ophalen bij een reservering, zodat we niet per les opnieuw de database in hoeven.
      *
      * @return array<string, mixed>
