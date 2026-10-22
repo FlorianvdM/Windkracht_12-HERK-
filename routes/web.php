@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\Eigenaar\ReservationController as EigenaarReservationController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Klant\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Algemene homepage: voor iedereen toegankelijk.
-Route::inertia('/', 'welcome')->name('home');
+// Algemene homepage: voor iedereen toegankelijk. Nu via een controller, zodat de pakketten uit de database komen.
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Vanaf hier moet je ingelogd zijn.
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -28,7 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('reserveringen', [ReservationController::class, 'index'])->name('reservations.index');
         Route::get('reserveringen/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
 
-        // NIEUW: de klant meldt dat hij het bedrag heeft betaald (casus 2g).
+        // De klant meldt dat hij het bedrag heeft betaald (casus 2g).
         Route::post('reserveringen/{reservation}/betaald', [ReservationController::class, 'reportPayment'])->name('reservations.report-payment');
     });
 
