@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PackageSeeder::class,
             LocationSeeder::class,
             ReservationSeeder::class,
+            EquipmentSeeder::class, // NIEUW: testdata voor het materiaalbeheer
         ]);
     }
 }

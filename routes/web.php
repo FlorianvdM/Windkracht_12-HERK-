@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Eigenaar\CancellationController;
+use App\Http\Controllers\Eigenaar\EquipmentController;
 use App\Http\Controllers\Eigenaar\LogController;
 use App\Http\Controllers\Eigenaar\ReservationController as EigenaarReservationController;
 use App\Http\Controllers\HomeController;
@@ -71,8 +72,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('annuleringen/{lesson}/goedkeuren', [CancellationController::class, 'approve'])->name('cancellations.approve');
         Route::post('annuleringen/{lesson}/afwijzen', [CancellationController::class, 'reject'])->name('cancellations.reject');
 
-        // NIEUW: logboek met in- en uitlogmomenten.
+        // Logboek met in- en uitlogmomenten.
         Route::get('logboek', [LogController::class, 'index'])->name('log.index');
+
+        // NIEUW: materiaalbeheer (kites, boards, wetsuits). {equipment} is het id van het materiaal.
+        Route::get('materiaal', [EquipmentController::class, 'index'])->name('equipment.index');
+        Route::post('materiaal', [EquipmentController::class, 'store'])->name('equipment.store');
+        Route::patch('materiaal/{equipment}', [EquipmentController::class, 'update'])->name('equipment.update');
+        Route::delete('materiaal/{equipment}', [EquipmentController::class, 'destroy'])->name('equipment.destroy');
     });
 });
 

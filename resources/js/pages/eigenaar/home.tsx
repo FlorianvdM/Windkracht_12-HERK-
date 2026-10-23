@@ -28,8 +28,13 @@ export default function EigenaarHome() {
                 {
                     titel: 'Logboek',
                     uitleg: 'Bekijk wie wanneer is in- en uitgelogd.',
-                    // NIEUW: de pagina uit Eigenaar\LogController
                     href: '/eigenaar/logboek',
+                },
+                {
+                    titel: 'Materiaal',
+                    uitleg: 'Beheer de kites, boards en wetsuits van de school.',
+                    // NIEUW: de pagina uit Eigenaar\EquipmentController
+                    href: '/eigenaar/materiaal',
                 },
             ]}
         />
