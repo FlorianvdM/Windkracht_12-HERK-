@@ -1,7 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatDatum } from '@/lib/format';
+import { formatDatum, lesStatusTekst } from '@/lib/format';
 
 type Weergave = 'dag' | 'week' | 'maand';
 
@@ -10,7 +10,7 @@ type Les = {
     id: number;
     date: string; // '2026-10-22'
     time: string; // '10:00'
-    status: string; // 'gepland' of 'geannuleerd'
+    status: string; // 'gepland', 'annulering_aangevraagd' of 'nieuwe_datum_kiezen'
     number: string; // reserveringsnummer, bijvoorbeeld 'WK12-1007'
     reservation_status: 'voorlopig' | 'definitief';
     customer: string;
@@ -38,6 +38,24 @@ const WEERGAVEN: { waarde: Weergave; label: string }[] = [
 // Het adres van deze pagina met een andere weergave of datum.
 const adres = (weergave: Weergave, datum: string) =>
     `/instructeur/lessen?weergave=${weergave}&datum=${datum}`;
+
+// NIEUW: een les annuleren met één van de twee standaardknoppen (casus 1e).
+// Laravel zet de status om en stuurt de standaardmail naar de klant.
+function annuleer(les: Les, reden: 'ziekte' | 'weer') {
+    const tekst =
+        reden === 'ziekte' ? 'ziekte van de instructeur' : 'slecht weer (windkracht > 10)';
+
+    // Eerst vragen of het zeker is: een annulering stuurt meteen een mail.
+    if (!confirm(`Les van ${les.customer} annuleren wegens ${tekst}?`)) {
+        return;
+    }
+
+    router.post(
+        `/instructeur/lessen/${les.id}/annuleren`,
+        { reden },
+        { preserveScroll: true },
+    );
+}
 
 // De titel boven de lijst: een dag, een week (van t/m) of een maand.
 function periodeTitel(weergave: Weergave, start: string, eind: string) {
@@ -150,12 +168,37 @@ export default function Lessen({
                                             {les.number}
                                         </p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        {les.status === 'geannuleerd' && (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {/* Afwijkende status (bijvoorbeeld geannuleerd) als extra label. */}
+                                        {les.status !== 'gepland' && (
                                             <Badge variant="outline">
-                                                Geannuleerd
+                                                {lesStatusTekst(les.status)}
                                             </Badge>
                                         )}
+                                        {/* NIEUW: de twee standaardknoppen, alleen bij een les die nog doorgaat. */}
+                                        {les.status !== 'nieuwe_datum_kiezen' &&
+                                            les.date >= vandaag && (
+                                                <>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            annuleer(les, 'ziekte')
+                                                        }
+                                                    >
+                                                        Ziekte
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            annuleer(les, 'weer')
+                                                        }
+                                                    >
+                                                        Slecht weer
+                                                    </Button>
+                                                </>
+                                            )}
                                         <Badge
                                             variant={
                                                 les.reservation_status ===

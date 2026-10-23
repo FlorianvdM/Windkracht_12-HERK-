@@ -20,6 +20,12 @@ export default function EigenaarHome() {
                     // Hetzelfde overzicht, maar met het filter voor voorlopige reserveringen
                     href: '/eigenaar/reserveringen?filter=onbetaald',
                 },
+                {
+                    titel: 'Annuleringen',
+                    uitleg: 'Beoordeel annuleringen van klanten en annuleer lessen bij ziekte of slecht weer.',
+                    // NIEUW: de pagina uit Eigenaar\CancellationController
+                    href: '/eigenaar/annuleringen',
+                },
             ]}
         />
     );
