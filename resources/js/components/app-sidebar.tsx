@@ -2,9 +2,13 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     CalendarDays,
     CalendarPlus,
+    CalendarX,
     LayoutGrid,
     ListChecks,
+    Package,
+    ScrollText,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -33,9 +37,23 @@ const menuPerRol: Record<Role, NavItem[]> = {
             icon: ListChecks,
         },
     ],
-    instructeur: [{ title: 'Home', href: '/instructeur', icon: LayoutGrid }],
+    // NIEUW: de instructeur ziet zijn lessen direct in het menu.
+    instructeur: [
+        { title: 'Home', href: '/instructeur', icon: LayoutGrid },
+        { title: 'Mijn lessen', href: '/instructeur/lessen', icon: CalendarDays },
+    ],
+    // NIEUW: alle pagina's van de eigenaar staan nu in het menu.
     eigenaar: [
         { title: 'Home', href: '/eigenaar', icon: LayoutGrid },
+        { title: 'Reserveringen', href: '/eigenaar/reserveringen', icon: ListChecks },
+        {
+            title: 'Openstaande betalingen',
+            href: '/eigenaar/reserveringen?filter=onbetaald',
+            icon: Wallet,
+        },
+        { title: 'Annuleringen', href: '/eigenaar/annuleringen', icon: CalendarX },
+        { title: 'Materiaal', href: '/eigenaar/materiaal', icon: Package },
+        { title: 'Logboek', href: '/eigenaar/logboek', icon: ScrollText },
         { title: 'Klantpagina', href: '/klant', icon: Users },
         { title: 'Instructeurpagina', href: '/instructeur', icon: CalendarDays },
     ],
