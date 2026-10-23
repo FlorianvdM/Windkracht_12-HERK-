@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\Eigenaar\CancellationController;
 use App\Http\Controllers\Eigenaar\ReservationController as EigenaarReservationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Instructeur\LessonController as InstructeurLessonController;
+use App\Http\Controllers\Klant\LessonController as KlantLessonController;
 use App\Http\Controllers\Klant\ReservationController;
+use App\Http\Controllers\LessonCancellationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,15 +35,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // De klant meldt dat hij het bedrag heeft betaald (casus 2g).
         Route::post('reserveringen/{reservation}/betaald', [ReservationController::class, 'reportPayment'])->name('reservations.report-payment');
+
+        // NIEUW: een les annuleren met reden, en na goedkeuring een nieuwe datum kiezen (casus 2e).
+        Route::post('lessen/{lesson}/annuleren', [KlantLessonController::class, 'cancel'])->name('lessons.cancel');
+        Route::post('lessen/{lesson}/verplaatsen', [KlantLessonController::class, 'reschedule'])->name('lessons.reschedule');
     });
 
     // Pagina's voor instructeurs.
     Route::middleware('role:instructeur')->prefix('instructeur')->name('instructeur.')->group(function () {
         Route::inertia('/', 'instructeur/home')->name('home');
 
-        // NIEUW: dag-, week- en maandoverzicht van de eigen lessen (casus 1f).
+        // Dag-, week- en maandoverzicht van de eigen lessen (casus 1f).
         // De weergave en datum staan in de adresbalk: ?weergave=week&datum=2026-10-22
         Route::get('lessen', [InstructeurLessonController::class, 'index'])->name('lessons.index');
+
+        // NIEUW: een les annuleren met de knop "Ziekte" of "Slecht weer" (casus 1e).
+        // De eigenaar komt ook door deze middleware en kan dus elke les annuleren (casus 3g).
+        Route::post('lessen/{lesson}/annuleren', [LessonCancellationController::class, 'store'])->name('lessons.cancel');
     });
 
     // Pagina's voor de eigenaar.
@@ -53,6 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Een reservering definitief maken: de pagina tonen en de status aanpassen.
         Route::get('reserveringen/{reservation}', [EigenaarReservationController::class, 'show'])->name('reservations.show');
         Route::post('reserveringen/{reservation}/definitief', [EigenaarReservationController::class, 'confirm'])->name('reservations.confirm');
+
+        // NIEUW: annuleringen van klanten beoordelen en zelf lessen annuleren.
+        Route::get('annuleringen', [CancellationController::class, 'index'])->name('cancellations.index');
+        Route::post('annuleringen/{lesson}/goedkeuren', [CancellationController::class, 'approve'])->name('cancellations.approve');
+        Route::post('annuleringen/{lesson}/afwijzen', [CancellationController::class, 'reject'])->name('cancellations.reject');
     });
 });
 

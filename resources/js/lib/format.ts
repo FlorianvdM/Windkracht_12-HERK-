@@ -23,3 +23,14 @@ export function formatDatum(datum: string): string {
         year: 'numeric',
     }).format(new Date(jaar, maand - 1, dag));
 }
+
+// NIEUW: de status van een les als leesbare tekst voor de gebruiker.
+export function lesStatusTekst(status: string): string {
+    const teksten: Record<string, string> = {
+        gepland: 'Gepland',
+        annulering_aangevraagd: 'Annulering aangevraagd',
+        nieuwe_datum_kiezen: 'Geannuleerd: kies een nieuwe datum',
+    };
+
+    return teksten[status] ?? status;
+}
