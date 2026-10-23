@@ -23,8 +23,13 @@ export default function EigenaarHome() {
                 {
                     titel: 'Annuleringen',
                     uitleg: 'Beoordeel annuleringen van klanten en annuleer lessen bij ziekte of slecht weer.',
-                    // NIEUW: de pagina uit Eigenaar\CancellationController
                     href: '/eigenaar/annuleringen',
+                },
+                {
+                    titel: 'Logboek',
+                    uitleg: 'Bekijk wie wanneer is in- en uitgelogd.',
+                    // NIEUW: de pagina uit Eigenaar\LogController
+                    href: '/eigenaar/logboek',
                 },
             ]}
         />
