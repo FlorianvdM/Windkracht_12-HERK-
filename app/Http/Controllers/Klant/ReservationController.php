@@ -81,6 +81,10 @@ class ReservationController extends Controller
                     'payment_reported' => false,
                     // De aanmelder betaalt het totaal, ook als het pakket per persoon is geprijsd (casus 2d).
                     'total_cents' => $package->price_cents * $package->max_persons,
+                    // NIEUW: de duo-lesser alleen opslaan bij een duo-pakket. Bij een privéles blijft het leeg.
+                    'duo_name' => $package->max_persons > 1 ? ($data['duo_name'] ?? null) : null,
+                    'duo_address' => $package->max_persons > 1 ? ($data['duo_address'] ?? null) : null,
+                    'duo_city' => $package->max_persons > 1 ? ($data['duo_city'] ?? null) : null,
                 ]);
 
                 foreach ($data['lesson_dates'] as $date) {
@@ -132,7 +136,7 @@ class ReservationController extends Controller
     }
 
     /**
-     * NIEUW: de klant meldt dat hij het openstaande bedrag heeft betaald (casus 2g).
+     * De klant meldt dat hij het openstaande bedrag heeft betaald (casus 2g).
      * Dit maakt de reservering nog NIET definitief: dat doet alleen de eigenaar na controle van de betaling.
      */
     public function reportPayment(Request $request, Reservation $reservation): RedirectResponse
@@ -190,6 +194,12 @@ class ReservationController extends Controller
             'customer' => [
                 'name' => $reservation->customer->name,
                 'email' => $reservation->customer->email,
+            ],
+            // NIEUW: de duo-lesser, of null als er geen tweede persoon is (privéles).
+            'duo' => $reservation->duo_name === null ? null : [
+                'name' => $reservation->duo_name,
+                'address' => $reservation->duo_address,
+                'city' => $reservation->duo_city,
             ],
             'lessons' => $reservation->lessons->map(fn (Lesson $lesson): array => [
                 'id' => $lesson->id,

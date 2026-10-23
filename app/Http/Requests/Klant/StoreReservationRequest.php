@@ -34,6 +34,11 @@ class StoreReservationRequest extends FormRequest
             'lesson_dates' => ['required', 'array', 'min:1'],
             // Elke lesdag: geldige datum, vanaf morgen, en geen dag dubbel.
             'lesson_dates.*' => ['required', 'date_format:Y-m-d', 'after:today', 'distinct'],
+            // NIEUW: NAW-gegevens van de duo-lesser. Of ze verplicht zijn, controleren we in after(),
+            // want dat hangt af van het gekozen pakket.
+            'duo_name' => ['nullable', 'string', 'max:255'],
+            'duo_address' => ['nullable', 'string', 'max:255'],
+            'duo_city' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -62,6 +67,25 @@ class StoreReservationRequest extends FormRequest
                     );
 
                     return;
+                }
+
+                // NIEUW: bij een duo-pakket (max. 2 personen) zijn de gegevens van de duo-lesser verplicht.
+                if ($package->max_persons > 1) {
+                    $velden = [
+                        'duo_name' => 'Vul de naam van je duo-lesser in.',
+                        'duo_address' => 'Vul het adres van je duo-lesser in.',
+                        'duo_city' => 'Vul de woonplaats van je duo-lesser in.',
+                    ];
+
+                    foreach ($velden as $veld => $melding) {
+                        if (blank($this->input($veld))) {
+                            $validator->errors()->add($veld, $melding);
+                        }
+                    }
+
+                    if ($validator->errors()->isNotEmpty()) {
+                        return;
+                    }
                 }
 
                 // Een instructeur geeft maximaal één les per dag (zie de lessons-tabel).
@@ -97,6 +121,9 @@ class StoreReservationRequest extends FormRequest
             'lesson_dates.*.date_format' => 'Een lesdag heeft geen geldige datum.',
             'lesson_dates.*.after' => 'Je kunt alleen lesdagen kiezen vanaf morgen.',
             'lesson_dates.*.distinct' => 'Je hebt dezelfde dag twee keer gekozen.',
+            'duo_name.max' => 'De naam van je duo-lesser is te lang.',
+            'duo_address.max' => 'Het adres van je duo-lesser is te lang.',
+            'duo_city.max' => 'De woonplaats van je duo-lesser is te lang.',
         ];
     }
 }

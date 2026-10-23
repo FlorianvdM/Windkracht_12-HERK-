@@ -21,6 +21,12 @@ export default function Reservering({
         '',
         `Pakket: ${pakket.name} (${formatUren(pakket.hours)} uur)`,
         `Locatie: ${locatie.name}`,
+        // NIEUW: bij een duo-pakket staat de duo-lesser ook in de mail.
+        ...(reservation.duo
+            ? [
+                  `Duo-lesser: ${reservation.duo.name}, ${reservation.duo.address}, ${reservation.duo.city}`,
+              ]
+            : []),
         'Lesdagen:',
         ...lessons.map((les) => `- ${formatDatum(les.date)}, ${les.time}`),
         '',

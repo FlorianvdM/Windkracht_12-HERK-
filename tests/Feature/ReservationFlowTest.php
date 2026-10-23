@@ -51,6 +51,10 @@ class ReservationFlowTest extends TestCase
             'package_id' => Package::where('name', $pakket)->value('id'),
             'location_id' => Location::where('name', $locatie)->value('id'),
             'lesson_dates' => [$this->dag(0), $this->dag(1), $this->dag(2)],
+            // NIEUW: de duo-lesser. Bij een privéles negeert de server deze velden.
+            'duo_name' => 'Sam de Vries',
+            'duo_address' => 'Strandweg 12',
+            'duo_city' => 'Zandvoort',
         ];
     }
 
@@ -115,6 +119,25 @@ class ReservationFlowTest extends TestCase
         $this->assertCount(3, $reservering->lessons);
         $this->assertSame('Duco Veenstra', $reservering->lessons->first()->instructor->name);
         $this->assertSame([$this->dag(0), $this->dag(1), $this->dag(2)], $reservering->lessons->sortBy('lesson_date')->map(fn (Lesson $les) => $les->lesson_date->format('Y-m-d'))->values()->all());
+    }
+
+    public function test_duo_details_are_required_for_a_duo_package(): void
+    {
+        $klant = $this->klant();
+
+        // Zonder duo-lesser: drie foutmeldingen en geen reservering.
+        $gegevens = $this->geldigeReservering();
+        unset($gegevens['duo_name'], $gegevens['duo_address'], $gegevens['duo_city']);
+
+        $this->actingAs($klant)->post(route('klant.reservations.store'), $gegevens)
+            ->assertSessionHasErrors(['duo_name', 'duo_address', 'duo_city']);
+        $this->assertSame(0, Reservation::where('user_id', $klant->id)->count());
+
+        // Met duo-lesser: de gegevens staan bij de reservering.
+        $this->actingAs($klant)->post(route('klant.reservations.store'), $this->geldigeReservering());
+        $reservering = Reservation::where('user_id', $klant->id)->firstOrFail();
+        $this->assertSame('Sam de Vries', $reservering->duo_name);
+        $this->assertSame('Zandvoort', $reservering->duo_city);
     }
 
     public function test_every_reservation_gets_its_own_number(): void
