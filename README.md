@@ -31,7 +31,8 @@ php artisan migrate --seed
 composer run dev
 ```
 
-Open daarna de website op het adres dat in de terminal staat (standaard http://localhost:8000).
+Open daarna de website op **http://localhost:8012**.
+De poort staat in `.env` bij `SERVER_PORT` en `APP_URL`.
 
 ## Testaccounts
 
