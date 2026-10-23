@@ -37,6 +37,8 @@ export type ReservationData = {
     package: { name: string; hours: number; max_persons: number };
     location: { name: string; instructor: string | null };
     customer: { name: string; email: string };
+    // NIEUW: de duo-lesser (naam, adres, woonplaats), of null bij een privéles.
+    duo: { name: string; address: string; city: string } | null;
     lessons: LessonRow[];
 };
 

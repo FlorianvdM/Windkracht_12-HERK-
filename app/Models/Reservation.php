@@ -20,8 +20,12 @@ use Illuminate\Support\Str;
  * @property ReservationStatus $status
  * @property bool $payment_reported
  * @property int $total_cents
+ * @property string|null $duo_name
+ * @property string|null $duo_address
+ * @property string|null $duo_city
  */
-#[Fillable(['number', 'user_id', 'package_id', 'location_id', 'status', 'payment_reported', 'total_cents'])]
+// NIEUW: de drie duo-velden zijn toegevoegd, zodat we ze in één keer kunnen opslaan met create().
+#[Fillable(['number', 'user_id', 'package_id', 'location_id', 'status', 'payment_reported', 'total_cents', 'duo_name', 'duo_address', 'duo_city'])]
 class Reservation extends Model
 {
     protected function casts(): array

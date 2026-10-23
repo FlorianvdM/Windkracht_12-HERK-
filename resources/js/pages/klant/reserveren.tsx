@@ -2,15 +2,26 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import AlertError from '@/components/alert-error';
+import InputError from '@/components/input-error';
 import LesdagenKalender from '@/components/lesdagen-kalender';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatDatum, formatEuro, formatUren } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { LocationOption, PackageOption } from '@/types/reservation';
 
 // De stappen van het reserveren (wireframes 8 t/m 12).
-// De stap "Duo" uit het ontwerp is een Could have en zit nog niet in het prototype.
-const STAPPEN = ['Pakket', 'Locatie', 'Lesdagen', 'Controle'];
+// NIEUW: de stap "Duo" zit er nu in. Bij een privéles slaan we die stap over.
+type Stap = 'pakket' | 'locatie' | 'lesdagen' | 'duo' | 'controle';
+
+const ALLE_STAPPEN: { id: Stap; naam: string }[] = [
+    { id: 'pakket', naam: 'Pakket' },
+    { id: 'locatie', naam: 'Locatie' },
+    { id: 'lesdagen', naam: 'Lesdagen' },
+    { id: 'duo', naam: 'Duo' },
+    { id: 'controle', naam: 'Controle' },
+];
 
 // Een aanklikbare kaart, bijvoorbeeld voor een pakket of een locatie.
 function Keuzekaart({
@@ -48,20 +59,36 @@ export default function Reserveren({
 
     // Op welke stap zit de klant? We bewaren alle keuzes in het formulier.
     // Pas bij de laatste stap sturen we alles in één keer naar Laravel.
-    const [stap, setStap] = useState(1);
+    const [stap, setStap] = useState<Stap>('pakket');
     const form = useForm<{
         package_id: number | null;
         location_id: number | null;
         lesson_dates: string[];
+        duo_name: string;
+        duo_address: string;
+        duo_city: string;
     }>({
         package_id: null,
         location_id: null,
         lesson_dates: [],
+        duo_name: '',
+        duo_address: '',
+        duo_city: '',
     });
 
     // Zoek de volledige gegevens op van wat de klant heeft gekozen.
     const pakket = packages.find((p) => p.id === form.data.package_id);
     const locatie = locations.find((l) => l.id === form.data.location_id);
+
+    // Is het een duo-pakket? Dan is de stap "Duo" nodig.
+    const isDuo = (pakket?.max_persons ?? 1) > 1;
+    const stappen = ALLE_STAPPEN.filter((s) => s.id !== 'duo' || isDuo);
+
+    // Alle drie de duo-velden moeten gevuld zijn voordat je verder mag.
+    const duoIngevuld =
+        form.data.duo_name.trim() !== '' &&
+        form.data.duo_address.trim() !== '' &&
+        form.data.duo_city.trim() !== '';
 
     // Een ander pakket of een andere locatie? Dan wissen we de lesdagen,
     // want het aantal dagen en de bezette dagen kunnen anders zijn.
@@ -84,29 +111,28 @@ export default function Reserveren({
             <Head title="Reserveren" />
 
             <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
-                {/* Stappenbalk */}
+                {/* Stappenbalk: bij een privéles staat "Duo" er niet tussen. */}
                 <ol className="flex flex-wrap gap-2 text-sm">
-                    {STAPPEN.map((naam, index) => (
+                    {stappen.map((s, index) => (
                         <li
-                            key={naam}
-                            aria-current={stap === index + 1 ? 'step' : undefined}
+                            key={s.id}
+                            aria-current={stap === s.id ? 'step' : undefined}
                             className={cn(
                                 'rounded-md border px-3 py-1.5',
-                                stap === index + 1
+                                stap === s.id
                                     ? 'border-primary bg-primary text-primary-foreground'
                                     : 'text-muted-foreground',
                             )}
                         >
-                            {index + 1}. {naam}
+                            {index + 1}. {s.naam}
                         </li>
                     ))}
                 </ol>
 
-                {/* Stap 1: pakket */}
-                {stap === 1 && (
+                {/* Stap: pakket */}
+                {stap === 'pakket' && (
                     <section className="space-y-4">
                         <header>
-                            <p className="text-sm text-muted-foreground">Stap 1</p>
                             <h1 className="text-2xl font-semibold">Kies een pakket</h1>
                             <p className="text-sm text-muted-foreground">
                                 Het aantal lesdagen volgt uit het pakket. Privé is
@@ -138,17 +164,16 @@ export default function Reserveren({
                             ))}
                         </div>
 
-                        <Button disabled={!pakket} onClick={() => setStap(2)}>
+                        <Button disabled={!pakket} onClick={() => setStap('locatie')}>
                             Verder naar locatie
                         </Button>
                     </section>
                 )}
 
-                {/* Stap 2: locatie */}
-                {stap === 2 && (
+                {/* Stap: locatie */}
+                {stap === 'locatie' && (
                     <section className="space-y-4">
                         <header>
-                            <p className="text-sm text-muted-foreground">Stap 2</p>
                             <h1 className="text-2xl font-semibold">Kies een locatie</h1>
                             <p className="text-sm text-muted-foreground">
                                 De locatie bepaalt welke instructeur de les geeft.
@@ -171,21 +196,23 @@ export default function Reserveren({
                         </div>
 
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setStap(1)}>
+                            <Button variant="outline" onClick={() => setStap('pakket')}>
                                 Terug
                             </Button>
-                            <Button disabled={!locatie} onClick={() => setStap(3)}>
+                            <Button
+                                disabled={!locatie}
+                                onClick={() => setStap('lesdagen')}
+                            >
                                 Verder naar lesdagen
                             </Button>
                         </div>
                     </section>
                 )}
 
-                {/* Stap 3: lesdagen */}
-                {stap === 3 && pakket && locatie && (
+                {/* Stap: lesdagen */}
+                {stap === 'lesdagen' && pakket && locatie && (
                     <section className="space-y-4">
                         <header>
-                            <p className="text-sm text-muted-foreground">Stap 3</p>
                             <h1 className="text-2xl font-semibold">Kies de lesdagen</h1>
                             <p className="text-sm text-muted-foreground">
                                 {pakket.name} heeft {pakket.lesson_days}{' '}
@@ -206,27 +233,85 @@ export default function Reserveren({
                         />
 
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setStap(2)}>
+                            <Button variant="outline" onClick={() => setStap('locatie')}>
                                 Terug
                             </Button>
+                            {/* Bij een duo-pakket eerst naar de stap Duo, anders direct naar de controle. */}
                             <Button
                                 disabled={
                                     form.data.lesson_dates.length !==
                                     pakket.lesson_days
                                 }
-                                onClick={() => setStap(4)}
+                                onClick={() => setStap(isDuo ? 'duo' : 'controle')}
                             >
+                                {isDuo ? 'Verder naar duo-lesser' : 'Verder naar controle'}
+                            </Button>
+                        </div>
+                    </section>
+                )}
+
+                {/* NIEUW. Stap: gegevens van de duo-lesser (casus 2d) */}
+                {stap === 'duo' && pakket && (
+                    <section className="space-y-4">
+                        <header>
+                            <h1 className="text-2xl font-semibold">Je duo-lesser</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Vul de naam, het adres en de woonplaats in van de
+                                persoon die samen met jou les krijgt. Jij ontvangt
+                                als aanmelder de totale rekening.
+                            </p>
+                        </header>
+
+                        <div className="grid max-w-md gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="duo_name">Naam</Label>
+                                <Input
+                                    id="duo_name"
+                                    value={form.data.duo_name}
+                                    onChange={(e) => form.setData('duo_name', e.target.value)}
+                                    autoComplete="off"
+                                />
+                                <InputError message={form.errors.duo_name} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="duo_address">Adres</Label>
+                                <Input
+                                    id="duo_address"
+                                    value={form.data.duo_address}
+                                    onChange={(e) =>
+                                        form.setData('duo_address', e.target.value)
+                                    }
+                                    autoComplete="off"
+                                />
+                                <InputError message={form.errors.duo_address} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="duo_city">Woonplaats</Label>
+                                <Input
+                                    id="duo_city"
+                                    value={form.data.duo_city}
+                                    onChange={(e) => form.setData('duo_city', e.target.value)}
+                                    autoComplete="off"
+                                />
+                                <InputError message={form.errors.duo_city} />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setStap('lesdagen')}>
+                                Terug
+                            </Button>
+                            <Button disabled={!duoIngevuld} onClick={() => setStap('controle')}>
                                 Verder naar controle
                             </Button>
                         </div>
                     </section>
                 )}
 
-                {/* Stap 4: controle en plaatsen */}
-                {stap === 4 && pakket && locatie && (
+                {/* Stap: controle en plaatsen */}
+                {stap === 'controle' && pakket && locatie && (
                     <section className="space-y-4">
                         <header>
-                            <p className="text-sm text-muted-foreground">Stap 4</p>
                             <h1 className="text-2xl font-semibold">Controle</h1>
                             <p className="text-sm text-muted-foreground">
                                 De aanmelder betaalt het totaal, ook als het pakket
@@ -236,6 +321,13 @@ export default function Reserveren({
 
                         <dl className="divide-y rounded-lg border text-sm">
                             <Regel naam="Aanmelder">{auth.user.name}</Regel>
+                            {/* NIEUW: de duo-lesser staat in de controle als het een duo-pakket is. */}
+                            {isDuo && (
+                                <Regel naam="Duo-lesser">
+                                    {form.data.duo_name} · {form.data.duo_address},{' '}
+                                    {form.data.duo_city}
+                                </Regel>
+                            )}
                             <Regel naam="Pakket">
                                 {pakket.name} · {formatUren(pakket.hours)} uur
                             </Regel>
@@ -259,13 +351,6 @@ export default function Reserveren({
                             </Regel>
                         </dl>
 
-                        {pakket.max_persons > 1 && (
-                            <p className="text-sm text-muted-foreground">
-                                De gegevens van je duo-lesser vul je in een latere
-                                versie in. In dit prototype staan ze er nog niet bij.
-                            </p>
-                        )}
-
                         {alleFouten.length > 0 && (
                             <AlertError
                                 title="De reservering is niet geplaatst."
@@ -277,7 +362,7 @@ export default function Reserveren({
                             <Button
                                 variant="outline"
                                 disabled={form.processing}
-                                onClick={() => setStap(3)}
+                                onClick={() => setStap(isDuo ? 'duo' : 'lesdagen')}
                             >
                                 Terug
                             </Button>
